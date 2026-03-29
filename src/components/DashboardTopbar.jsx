@@ -22,20 +22,29 @@ export function DashboardTopbar() {
     navigate('/');
   };
 
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
+  const getInitials = (prenom, nom, email) => {
+    // 1. Si on a un prénom et un nom, on fait les vraies initiales
+    if (prenom && nom) {
+      return `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase(); 
+    }
+    // 2. Plan B de sécurité : Si le profil est vide, on prend la 1ère lettre de l'email
+    if (email) {
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
   };
+
+  // Petite variable pratique pour ne pas répéter la logique partout
+  const displayName = user?.prenom && user?.nom 
+    ? `${user.prenom} ${user.nom}` 
+    : user?.email;
 
   return (
     <header className="h-16 border-b bg-white dark:bg-[#1a1f2e] dark:border-gray-800 sticky top-0 z-40">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex-1">
           <h2 className="text-gray-900 dark:text-white">
-            Bienvenue, {user?.name}
+            Bienvenue, {displayName || 'Utilisateur'}
           </h2>
         </div>
 
@@ -67,16 +76,19 @@ export function DashboardTopbar() {
               <Button variant="ghost" className="gap-2 rounded-full">
                 <Avatar className="w-8 h-8">
                   <AvatarFallback className="bg-[#1E88E5] text-white text-sm">
-                    {user && getInitials(user.name)}
+                    {/* On passe le prénom, le nom et l'email à notre fonction */}
+                    {user && getInitials(user?.prenom, user?.nom, user?.email)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline text-sm">{user?.name}</span>
+                {/* Affichage du nom complet à côté de l'avatar */}
+                <span className="hidden md:inline text-sm">{displayName}</span>
                 <ChevronDown className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-2 py-1.5">
-                <p className="text-sm text-gray-900 dark:text-white">{user?.name}</p>
+                {/* Affichage dans le menu déroulant */}
+                <p className="text-sm text-gray-900 dark:text-white">{displayName}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />

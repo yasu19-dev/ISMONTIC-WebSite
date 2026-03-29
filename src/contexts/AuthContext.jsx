@@ -1,28 +1,35 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // 1. Initialisation : On vérifie s'il y a déjà un utilisateur sauvegardé dans le navigateur
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
-  const login = (email, password) => {
-    // Simulation de connexion basée sur l'email
-    let role = 'stagiaire';
-    if (email.includes('admin')) role = 'admin';
-    else if (email.includes('formateur')) role = 'formateur';
-
-    const mockUser = {
-      id: '1',
-      name: role === 'stagiaire' ? 'Zaid SAOUSAOU' : role === 'formateur' ? 'Prof. Bouchra EL AKEL' : 'Admin ISMONTIC',
-      email,
-      role: role,
-    };
-    setUser(mockUser);
-    return role;
+  // 2. La vraie fonction Login (qui sera appelée par Login.jsx APRES la requête Axios)
+  const login = (userData, token) => {
+    setUser(userData); // Met à jour l'état global React
+    
+    // Sauvegarde dans le navigateur pour ne pas être déconnecté au rafraîchissement
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', token);
+    
+    // On extrait le rôle pour le retourner si besoin
+    const roleCode = userData.roles && userData.roles.length > 0 ? userData.roles[0].code : 'stagiaire';
+    localStorage.setItem('role', roleCode);
+    
+    return roleCode;
   };
 
+  // 3. Déconnexion propre
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
   };
 
   return (

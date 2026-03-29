@@ -1,25 +1,62 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios'; // N'oublie pas d'installer axios: npm install axios
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
-import { GraduationCap, Lock, Mail } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { GraduationCap, Lock, Mail, AlertCircle } from 'lucide-react'; // Ajout de AlertCircle
+// import { useAuth } from '../contexts/AuthContext'; // On va le modifier plus tard, garde-le commenté pour l'instant
 import { useTheme } from '../contexts/ThemeContext';
 import { Moon, Sun } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // Pour afficher les erreurs de l'API
+  const [isLoading, setIsLoading] = useState(false); // Pour le bouton de chargement
   const navigate = useNavigate();
-  const { login } = useAuth();
+  // const { login } = useAuth(); // Sera utilisé quand on branchera le contexte global
   const { theme, toggleTheme } = useTheme();
 
-  const handleSubmit = (e) => {
+  const { login } = useAuth(); 
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const role = login(email, password);
-    navigate(`/${role}/dashboard`);
+    setError('');
+    setIsLoading(true);
+
+    try {
+      // 1. On interroge Laravel
+      const response = await axios.post('http://127.0.0.1:8000/api/login', {
+        email: email,
+        password: password
+      },{
+        headers: {
+          'Accept': 'application/json' // Très important pour Laravel !
+        }
+      });
+
+      // 2. On récupère les vraies données
+      const { token, user } = response.data;
+
+      // 3. LA MAGIE EST ICI : On envoie les données au Contexte global !
+      const userRole = login(user, token);
+
+      // 4. La porte est ouverte, on navigue vers le Dashboard
+      navigate(`/${userRole}/dashboard`);
+
+    } catch (err) {
+      console.error("DÉTAIL DE L'ERREUR :", err);
+      if (err.response && err.response.status === 401) {
+        setError('Email ou mot de passe incorrect.');
+      } else {
+        setError('Une erreur est survenue de notre côté. Veuillez réessayer.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,6 +80,15 @@ export function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Bloc d'affichage des erreurs */}
+          {error && (
+            <div className="p-3 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
@@ -85,8 +131,9 @@ export function Login() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
-            Se connecter
+          {/* Bouton avec état de chargement */}
+          <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+            {isLoading ? 'Connexion en cours...' : 'Se connecter'}
           </Button>
 
           <div className="relative my-6">

@@ -23,7 +23,13 @@ export function DashboardSidebar() {
   const { user } = useAuth();
 
   const getSidebarItems = () => {
-    if (user?.role === 'stagiaire') {
+    // 1. On extrait le rôle proprement (comme dans App.jsx)
+    const currentRole = (user?.roles && user.roles.length > 0) 
+      ? user.roles[0].code 
+      : localStorage.getItem('role');
+
+    // 2. On utilise currentRole au lieu de user?.role
+    if (currentRole === 'stagiaire') {
       return [
         { icon: LayoutDashboard, label: 'Tableau de bord', path: '/stagiaire/dashboard' },
         { icon: User, label: 'Profil', path: '/stagiaire/profile' },
@@ -36,7 +42,7 @@ export function DashboardSidebar() {
         { icon: HeartPulse, label: 'Couverture Médicale', path: '/stagiaire/medical' },
         { icon: BookOpen, label: 'E-learning', path: '/stagiaire/elearning' },
       ];
-    } else if (user?.role === 'formateur') {
+    } else if (currentRole === 'formateur') {
       return [
         { icon: LayoutDashboard, label: 'Tableau de bord', path: '/formateur/dashboard' },
         { icon: PenTool, label: 'Saisie des notes', path: '/formateur/notes' },
@@ -44,7 +50,7 @@ export function DashboardSidebar() {
         { icon: BarChart3, label: 'Statistiques', path: '/formateur/statistics' },
         { icon: User, label: 'Profil', path: '/formateur/profile' },
       ];
-    } else if (user?.role === 'admin') {
+    } else if (currentRole === 'admin') {
       return [
         { icon: LayoutDashboard, label: 'Tableau de bord', path: '/admin/dashboard' },
         { icon: Calendar, label: 'Emploi du temps', path: '/admin/schedule' },

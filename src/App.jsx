@@ -63,8 +63,14 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  // On extrait le rôle exactement comme on l'a fait lors de la connexion
+  // S'il n'est pas dans l'objet user, on va le chercher dans le localStorage par sécurité
+  const userRole = (user.roles && user.roles.length > 0) 
+    ? user.roles[0].code 
+    : localStorage.getItem('role');
+
+  if (!allowedRoles.includes(userRole)) {
+    return <Navigate to="/" replace />; // Redirige vers l'accueil si le rôle ne correspond pas
   }
 
   return <>{children}</>;
