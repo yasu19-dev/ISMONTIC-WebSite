@@ -1,30 +1,48 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  // 1. Initialisation : On vérifie s'il y a déjà un utilisateur sauvegardé dans le navigateur
+  // 1. Initialisation : Récupération de la session existante
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // 2. La vraie fonction Login (qui sera appelée par Login.jsx APRES la requête Axios)
+  // 2. La fonction Login (appelée après le succès d'Axios)
   const login = (userData, token) => {
-    setUser(userData); // Met à jour l'état global React
+    // Mise à jour de l'état global React
+    setUser(userData); 
     
-    // Sauvegarde dans le navigateur pour ne pas être déconnecté au rafraîchissement
+    // Sauvegarde de l'objet utilisateur complet (incluant adminSubRole)
     localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', token);
     
-    // On extrait le rôle pour le retourner si besoin
-    const roleCode = userData.roles && userData.roles.length > 0 ? userData.roles[0].code : 'stagiaire';
-    localStorage.setItem('role', roleCode);
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     
-    return roleCode;
+    // --- LOGIQUE DE RÔLE MISE À JOUR ---
+    // On définit le rôle qui servira à la navigation et aux ProtectedRoutes
+    let effectiveRole = 'stagiaire';
+    
+    if (userData.role === 'admin') {
+      // Pour un admin, on utilise son sous-rôle (directeur ou responsable_stagiaire)
+      //
+      effectiveRole = userData.adminSubRole; 
+    } else {
+      // Pour les autres, on utilise le rôle de base (formateur ou stagiaire)
+      //
+      effectiveRole = userData.role;
+    }
+    
+    // On stocke ce rôle précis pour le récupérer au rafraîchissement
+    localStorage.setItem('role', effectiveRole);
+    
+    // On retourne ce rôle pour que Login.jsx sache où rediriger
+    return effectiveRole;
   };
 
-  // 3. Déconnexion propre
+  // 3. Déconnexion complète
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -42,7 +60,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
   }
   return context;
 }

@@ -16,6 +16,8 @@ import {
   GraduationCap,
   HeartPulse,
   PenTool,
+  FileCheck,
+  Lock,
 } from 'lucide-react';
 
 export function DashboardSidebar() {
@@ -23,12 +25,12 @@ export function DashboardSidebar() {
   const { user } = useAuth();
 
   const getSidebarItems = () => {
-    // 1. On extrait le rôle proprement (comme dans App.jsx)
-    const currentRole = (user?.roles && user.roles.length > 0) 
-      ? user.roles[0].code 
-      : localStorage.getItem('role');
+    // 1. DÉTERMINER LE RÔLE EFFECTIF
+    const currentRole = user?.role === 'admin' 
+      ? user.adminSubRole 
+      : (user?.role || localStorage.getItem('role'));
 
-    // 2. On utilise currentRole au lieu de user?.role
+    // 2. LOGIQUE POUR LES STAGIAIRES
     if (currentRole === 'stagiaire') {
       return [
         { icon: LayoutDashboard, label: 'Tableau de bord', path: '/stagiaire/dashboard' },
@@ -38,11 +40,13 @@ export function DashboardSidebar() {
         { icon: FolderOpen, label: 'Documents', path: '/stagiaire/documents' },
         { icon: Megaphone, label: 'Annonces', path: '/stagiaire/announcements' },
         { icon: MessageSquare, label: 'Réclamations', path: '/stagiaire/complaints' },
-        { icon: FileText, label: 'Attestations', path: '/stagiaire/attestations' },
         { icon: HeartPulse, label: 'Couverture Médicale', path: '/stagiaire/medical' },
         { icon: BookOpen, label: 'E-learning', path: '/stagiaire/elearning' },
       ];
-    } else if (currentRole === 'formateur') {
+    } 
+    
+    // 3. LOGIQUE POUR LES FORMATEURS
+    if (currentRole === 'formateur') {
       return [
         { icon: LayoutDashboard, label: 'Tableau de bord', path: '/formateur/dashboard' },
         { icon: PenTool, label: 'Saisie des notes', path: '/formateur/notes' },
@@ -50,19 +54,60 @@ export function DashboardSidebar() {
         { icon: BarChart3, label: 'Statistiques', path: '/formateur/statistics' },
         { icon: User, label: 'Profil', path: '/formateur/profile' },
       ];
-    } else if (currentRole === 'admin') {
-      return [
-        { icon: LayoutDashboard, label: 'Tableau de bord', path: '/admin/dashboard' },
-        { icon: Calendar, label: 'Emploi du temps', path: '/admin/schedule' },
-        { icon: BarChart3, label: 'Statistiques absences', path: '/admin/absences-stats' },
-        { icon: FileText, label: 'Attestations', path: '/admin/attestations' },
-        { icon: Users, label: 'Utilisateurs', path: '/admin/users' },
-        { icon: Settings, label: 'Paramètres', path: '/admin/settings' },
-      ];
-    }
+    } 
+
+   // 4. LOGIQUE POUR LES ADMINS (Directeur / Responsable)
+if (currentRole === 'directeur' || currentRole === 'responsable_stagiaire') {
+  const isDirecteur = currentRole === 'directeur';
+  const isResponsable = currentRole === 'responsable_stagiaire';
+
+  return [
+    { 
+      icon: LayoutDashboard, 
+      label: 'Tableau de bord', 
+      // SYNC : Utilise 'responsable-stagiaire' pour correspondre à App.jsx
+      path: isDirecteur ? '/director/dashboard' : '/responsable-stagiaire/dashboard' 
+    },
+    { 
+      icon: Calendar, 
+      label: 'Emploi du temps', 
+      // SYNC : Utilise 'responsable-stagiaire' ici aussi
+      path: isDirecteur ? '/director/schedule' : '/responsable-stagiaire/schedule' 
+    },
+    { 
+      icon: FileCheck, 
+      label: 'Justifications d\'absences', 
+      path: '/responsable-stagiaire/justifications', // Sync avec App.jsx
+      accessible: isResponsable,
+      restricted: isDirecteur,
+    },
+    { 
+      icon: BarChart3, 
+      label: 'Statistiques d\'absences', 
+      path: isDirecteur ? '/director/absences-stats' : '/responsable-stagiaire/absences-stats',
+    },
+    { 
+      icon: FileText, 
+      label: 'Attestations', 
+      // SYNC : Change '/admin/attestations' par ton nouveau préfixe
+      path: '/responsable-stagiaire/attestations', 
+      accessible: isResponsable,
+      restricted: isDirecteur,
+    },
+    { 
+      icon: Users, 
+      label: 'Utilisateurs', 
+      path: '/director/users', // Sync avec App.jsx
+      accessible: isDirecteur,
+      restricted: isResponsable,
+    },
+  ];
+}
+    
     return [];
   };
 
+  // --- LIGNE CRUCIALE : C'est ici que sidebarItems est défini ! ---
   const sidebarItems = getSidebarItems();
 
   return (
@@ -72,18 +117,32 @@ export function DashboardSidebar() {
           <div className="w-10 h-10 rounded-lg bg-[#1E88E5] flex items-center justify-center">
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
-          <span className="text-gray-900 dark:text-white">ISMONTIC</span>
+          <span className="text-gray-900 dark:text-white font-bold">ISMONTIC</span>
         </Link>
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {sidebarItems.map((item) => {
+        {sidebarItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
+          const isRestricted = item.restricted === true;
+          const isAccessible = item.accessible !== false;
+          
+          if (isRestricted) {
+            return (
+              <div key={index} className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60">
+                <Icon className="w-5 h-5" />
+                <span className="text-sm flex-1">{item.label}</span>
+                <Lock className="w-4 h-4" />
+              </div>
+            );
+          }
+
+          if (!isAccessible) return null;
           
           return (
             <Link
-              key={item.path}
+              key={index}
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive

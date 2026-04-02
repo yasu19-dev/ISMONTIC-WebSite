@@ -39,13 +39,26 @@ export function Login() {
       });
 
       // 2. On récupère les vraies données
-      const { token, user } = response.data;
+      // --- DANS TON HANDLESUBMIT ---
 
-      // 3. LA MAGIE EST ICI : On envoie les données au Contexte global !
-      const userRole = login(user, token);
+// 2. On récupère les données (le rôle est aussi à la racine du JSON)
+    const { token, user, role } = response.data;
 
-      // 4. La porte est ouverte, on navigue vers le Dashboard
-      navigate(`/${userRole}/dashboard`);
+    // 3. On connecte l'utilisateur dans le contexte
+    login(user, token); 
+
+    // 4. LOGIQUE DE REDIRECTION INTELLIGENTE
+    if (role === 'admin') {
+      // On regarde le sous-rôle pour savoir quel dashboard afficher
+      if (user.adminSubRole === 'directeur') {
+        navigate('/director/dashboard');
+      } else {
+        navigate('/responsable-stagiaire/dashboard');
+      }
+    } else {
+      // Pour les formateurs et stagiaires, la logique reste simple
+      navigate(`/${role}/dashboard`);
+    }
 
     } catch (err) {
       console.error("DÉTAIL DE L'ERREUR :", err);
