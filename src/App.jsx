@@ -93,8 +93,8 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* --- ROUTES EXISTANTES (Stagiaire, Formateur, Admin) --- */}
-      {/* (J'ai gardé tes routes exactes pour ne pas surcharger le bloc, elles restent identiques à ce que tu as envoyé) */}
+      {/* --- ROUTES (Stagiaire, Formateur--- */}
+     
       <Route path="/stagiaire/dashboard" element={<ProtectedRoute allowedRoles={['stagiaire']}><DashboardLayout><StagiaireDashboard /></DashboardLayout></ProtectedRoute>} />
       <Route path="/stagiaire/profile" element={<ProtectedRoute allowedRoles={['stagiaire']}><DashboardLayout><StagiaireProfile /></DashboardLayout></ProtectedRoute>} />
       <Route path="/stagiaire/notes" element={<ProtectedRoute allowedRoles={['stagiaire']}><DashboardLayout><StagiaireNotes /></DashboardLayout></ProtectedRoute>} />
