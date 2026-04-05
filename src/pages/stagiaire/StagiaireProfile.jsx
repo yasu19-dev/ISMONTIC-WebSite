@@ -73,22 +73,22 @@ export function StagiaireProfile() {
 
     fetchProfileData();
   }, []);
-//   const handleUpdateProfile = async (e) => {
-//     e.preventDefault();
-//   try {
-//     const token = localStorage.getItem('token');
-//     await axios.put('http://127.0.0.1:8000/api/stagiaire/profile', {
-//       email,
-//       telephone,
-//       adresse
-//     }, {
-//       headers: { Authorization: `Bearer ${token}` }
-//     });
-//     alert("Profil mis à jour !");
-//   } catch (error) {
-//     alert("Erreur lors de la mise à jour.");
-//   }
-// };
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put('http://127.0.0.1:8000/api/stagiaire/profile/', {
+      email,
+      telephone,
+      adresse
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    alert("Profil mis à jour !");
+  } catch (error) {
+    alert("Erreur lors de la mise à jour.");
+  }
+};
 
   // Écran de chargement
   if (loading) {
@@ -154,10 +154,7 @@ export function StagiaireProfile() {
               </Badge>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline">Modifier le profil</Button>
-            <Button>Télécharger carte</Button>
-          </div>
+          
         </div>
       </Card>
 
@@ -212,7 +209,7 @@ export function StagiaireProfile() {
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" disabled />
                 </div>
               </div>
               <div className="space-y-2">
@@ -226,7 +223,7 @@ export function StagiaireProfile() {
             <Separator className="my-6" />
             <div className="flex justify-end gap-3">
               <Button variant="outline">Annuler</Button>
-              <Button>Enregistrer les modifications</Button>
+              <Button onClick={handleUpdateProfile}>Enregistrer les modifications</Button>
             </div>
           </Card>
         </TabsContent>
