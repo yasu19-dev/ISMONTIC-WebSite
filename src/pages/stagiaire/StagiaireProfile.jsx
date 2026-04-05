@@ -73,22 +73,22 @@ export function StagiaireProfile() {
 
     fetchProfileData();
   }, []);
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-  try {
-    const token = localStorage.getItem('token');
-    await axios.put('http://127.0.0.1:8000/api/stagiaire/profile', {
-      email,
-      telephone,
-      adresse
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    alert("Profil mis à jour !");
-  } catch (error) {
-    alert("Erreur lors de la mise à jour.");
-  }
-};
+//   const handleUpdateProfile = async (e) => {
+//     e.preventDefault();
+//   try {
+//     const token = localStorage.getItem('token');
+//     await axios.put('http://127.0.0.1:8000/api/stagiaire/profile', {
+//       email,
+//       telephone,
+//       adresse
+//     }, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     });
+//     alert("Profil mis à jour !");
+//   } catch (error) {
+//     alert("Erreur lors de la mise à jour.");
+//   }
+// };
 
   // Écran de chargement
   if (loading) {
@@ -226,7 +226,7 @@ export function StagiaireProfile() {
             <Separator className="my-6" />
             <div className="flex justify-end gap-3">
               <Button variant="outline">Annuler</Button>
-              <Button onClick={handleUpdateProfile}>Enregistrer les modifications</Button>
+              <Button>Enregistrer les modifications</Button>
             </div>
           </Card>
         </TabsContent>
